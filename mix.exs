@@ -6,6 +6,7 @@ defmodule Supra.MixProject do
 
   def project do
     [
+      aliases: aliases(),
       app: :supra,
       deps: deps(),
       description: "Common functions and macros for Ecto",
@@ -28,18 +29,29 @@ defmodule Supra.MixProject do
 
   def cli,
     do: [
-      preferred_envs: [credo: :test, dialyzer: :test]
+      preferred_envs: [credo: :test, dialyzer: :test, "ecto.setup": :test, "ecto.reset": :test]
     ]
 
   # # #
+
+  defp aliases do
+    [
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+    ]
+  end
 
   defp deps,
     do: [
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:ecto, "~> 3.0"},
+      {:ecto_sql, "~> 3.0", optional: true},
       {:ex_doc, "~> 0.28", only: [:docs, :dev], runtime: false},
       {:mix_audit, "~> 2.0", only: :dev, runtime: false},
-      {:moar, "~> 1.10", only: :test}
+      {:moar, "~> 1.10", only: :test},
+      {:postgrex, ">= 0.0.0", only: :test}
     ]
 
   defp dialyzer,
