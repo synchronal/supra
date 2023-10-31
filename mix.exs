@@ -29,7 +29,13 @@ defmodule Supra.MixProject do
 
   def cli,
     do: [
-      preferred_envs: [credo: :test, dialyzer: :test, "ecto.setup": :test, "ecto.reset": :test]
+      preferred_envs: [
+        credo: :test,
+        dialyzer: :test,
+        "ecto.gen.migration": :test,
+        "ecto.setup": :test,
+        "ecto.reset": :test
+      ]
     ]
 
   # # #
