@@ -6,6 +6,8 @@ defmodule Supra do
 
   require Ecto.Query
 
+  @type change(type) :: Ecto.Changeset.t(type)
+
   @type result(type) :: {:ok, type} | {:error, Ecto.Changeset.t(type)}
   @type result(ok_t, error_t) :: {:ok, ok_t} | {:error, Ecto.Changeset.t(error_t)}
 
