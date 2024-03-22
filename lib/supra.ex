@@ -11,9 +11,15 @@ defmodule Supra do
   @type result(type) :: {:ok, type} | {:error, Ecto.Changeset.t(type)}
   @type result(ok_t, error_t) :: {:ok, ok_t} | {:error, Ecto.Changeset.t(error_t)}
 
+  @doc "Returns the number of rows in `queryable`"
   @spec count(Ecto.Queryable.t(), repo: Ecto.Repo.t()) :: non_neg_integer()
   def count(queryable, repo: repo),
     do: queryable |> repo.aggregate(:count)
+
+  @doc "Limits `queryable` to one result and returns that result"
+  @spec first(Ecto.Queryable.t(), repo: Ecto.Repo.t()) :: Ecto.Schema.t() | nil
+  def first(queryable, repo: repo),
+    do: queryable |> limit(1) |> repo.one()
 
   @doc """
   Returns `query` as a string with all parameters formatted in the specified style. Styles are rendered via

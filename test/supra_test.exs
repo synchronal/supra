@@ -17,6 +17,20 @@ defmodule SupraTest do
     end
   end
 
+  describe "first" do
+    test "limits the query to one result and returns it" do
+      Test.Schemas.House.changeset(address: "123 Main St") |> Test.Repo.insert!()
+      Test.Schemas.House.changeset(address: "234 Main St") |> Test.Repo.insert!()
+
+      assert %Test.Schemas.House{address: "234 Main St"} =
+               Ecto.Query.from(h in Test.Schemas.House, order_by: {:desc, h.address}) |> Supra.first(repo: Test.Repo)
+    end
+
+    test "returns nil when there are no results" do
+      assert Test.Schemas.House |> Supra.first(repo: Test.Repo) == nil
+    end
+  end
+
   describe "limit" do
     test "applies a limit to a query" do
       Test.Schemas.House.changeset(address: "123 Main St") |> Test.Repo.insert!()
