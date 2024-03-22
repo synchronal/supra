@@ -1,10 +1,12 @@
 defmodule Supra.Format do
   # @related [test](test/supra/format_test.exs)
 
-  @moduledoc false
+  @moduledoc "Internal module for formatting a sql query"
+
   @type style() :: :bright | :color | :inverse | :underline
   @styles ~w[bright color inverse underline]a
 
+  @doc "See `Supra.format/3`"
   def format({sql, params}, style) when style in @styles do
     sql
     |> String.split(~r|\$\d+|, include_captures: true, trim: true)
