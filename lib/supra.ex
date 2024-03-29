@@ -8,8 +8,13 @@ defmodule Supra do
 
   @type change(type) :: Ecto.Changeset.t(type)
 
+  @type preloadable() :: [Ecto.Schema.t()] | Ecto.Schema.t() | nil
+  @type preloadable(type) :: [type] | type | nil
+
   @type result(type) :: {:ok, type} | {:error, Ecto.Changeset.t(type)}
   @type result(ok_t, error_t) :: {:ok, ok_t} | {:error, Ecto.Changeset.t(error_t)}
+
+  # # #
 
   @doc "Returns the number of rows in `queryable`"
   @spec count(Ecto.Queryable.t(), repo: Ecto.Repo.t()) :: non_neg_integer()
