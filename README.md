@@ -15,7 +15,7 @@ The package can be installed by adding `supra` to your list of dependencies in `
 ```elixir
 def deps do
   [
-    {:supra, "~> 0.2.0"}
+    {:supra, "~> 0.3.0"}
   ]
 end
 ```
