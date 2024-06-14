@@ -14,23 +14,11 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: 1.14.5
+              elixir: 1.15.0
               otp: 25.0
           - pair:
-              elixir: 1.14.5
-              otp: 26.0
-          - pair:
-              elixir: 1.15.7
-              otp: 25.0
-          - pair:
-              elixir: 1.15.7
-              otp: 26.0
-          - pair:
-              elixir: 1.16.0
-              otp: 25.0
-          - pair:
-              elixir: 1.16.1
-              otp: 26.2.2
+              elixir: 1.17.0
+              otp: 27.0
     name: Build Test
     runs-on: ubuntu-20.04
     env:
@@ -66,23 +54,11 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: 1.14.5
+              elixir: 1.15.0
               otp: 25.0
           - pair:
-              elixir: 1.14.5
-              otp: 26.0
-          - pair:
-              elixir: 1.15.7
-              otp: 25.0
-          - pair:
-              elixir: 1.15.7
-              otp: 26.0
-          - pair:
-              elixir: 1.16.0
-              otp: 25.0
-          - pair:
-              elixir: 1.16.1
-              otp: 26.2.2
+              elixir: 1.17.0
+              otp: 27.0
     name: Build Dev
     runs-on: ubuntu-20.04
     env:
@@ -118,23 +94,11 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: 1.14.5
+              elixir: 1.15.0
               otp: 25.0
           - pair:
-              elixir: 1.14.5
-              otp: 26.0
-          - pair:
-              elixir: 1.15.7
-              otp: 25.0
-          - pair:
-              elixir: 1.15.7
-              otp: 26.0
-          - pair:
-              elixir: 1.16.0
-              otp: 25.0
-          - pair:
-              elixir: 1.16.1
-              otp: 26.2.2
+              elixir: 1.17.0
+              otp: 27.0
             latest: true
     name: Test
     needs: build_test
@@ -143,7 +107,7 @@ jobs:
       MIX_ENV: test
     services:
       postgres:
-        image: postgres:16.2-alpine
+        image: postgres:16.3-alpine
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
@@ -188,8 +152,8 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: 1.16.1
-              otp: 26.2.2
+              elixir: 1.17.0
+              otp: 27.0
     name: Credo + Dialyxir
     needs: build_test
     runs-on: ubuntu-20.04
@@ -231,8 +195,8 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: 1.16.1
-              otp: 26.2.2
+              elixir: 1.17.0
+              otp: 27.0
     name: Audit
     needs: build_dev
     runs-on: ubuntu-20.04
@@ -272,8 +236,8 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: 1.16.1
-              otp: 26.2.2
+              elixir: 1.17.0
+              otp: 27.0
     name: Publish to Hex
     if: github.ref == 'refs/heads/main'
     needs:
