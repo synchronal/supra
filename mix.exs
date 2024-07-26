@@ -54,6 +54,7 @@ defmodule Supra.MixProject do
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
       {:ecto, "~> 3.0"},
       {:ecto_sql, "~> 3.0", optional: true},
+      {:ecto_temp, "~> 1.2", only: :test, runtime: false},
       {:ex_doc, "~> 0.28", only: [:docs, :dev], runtime: false},
       {:mix_audit, "~> 2.0", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.2", runtime: false, only: :dev},

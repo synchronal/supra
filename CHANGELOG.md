@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `Supra.stream_by` for streaming queries outside of transactions.
+
 ## v1.0.0
 
 - Verify support for Elixir 1.17.0.

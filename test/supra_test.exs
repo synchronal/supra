@@ -39,4 +39,103 @@ defmodule SupraTest do
       assert Test.Schemas.House |> Supra.limit(1) |> Supra.count(repo: Test.Repo) == 1
     end
   end
+
+  describe "stream_by" do
+    use EctoTemp, repo: Test.Repo
+
+    require EctoTemp.Factory
+
+    deftemptable :data_temp do
+      column(:value, :string, null: false)
+    end
+
+    setup do
+      create_temp_tables()
+      :ok
+    end
+
+    defmodule Data do
+      use Ecto.Schema
+      import Ecto.Changeset, only: [cast: 3]
+
+      @primary_key false
+      schema "data_temp" do
+        field(:value, :string)
+      end
+
+      def padded(int),
+        do: String.pad_leading(to_string(int), 4, "0")
+
+      def changeset(attrs), do: cast(%__MODULE__{}, Map.new(attrs), ~w[value]a)
+
+      defmodule Query do
+        import Ecto.Query
+        def base, do: from(_ in Data, as: :data)
+
+        def where_greater_than(query \\ base(), int) do
+          value = "value-#{Data.padded(int)}"
+          where(query, [data: d], d.value > ^value)
+        end
+      end
+    end
+
+    setup %{max_value: max} do
+      for int <- 1..max do
+        EctoTemp.Factory.insert(:data_temp, value: "value-#{Data.padded(int)}")
+      end
+
+      :ok
+    end
+
+    @tag max_value: 50
+    test "handles datasets less than batch size" do
+      Supra.stream_by(Data.Query.base(), :value, repo: Test.Repo)
+      |> Enum.count()
+      |> assert_eq(50)
+
+      assert [%{value: "value-0001"}] =
+               Supra.stream_by(Data.Query.base(), :value, repo: Test.Repo)
+               |> Stream.take(1)
+               |> Enum.to_list()
+
+      assert [%{value: "value-0050"}] =
+               Supra.stream_by(Data.Query.base(), :value, order: :desc, repo: Test.Repo)
+               |> Stream.take(1)
+               |> Enum.to_list()
+    end
+
+    @tag max_value: 345
+    test "handles datasets greater than batch size" do
+      Supra.stream_by(Data.Query.base(), :value, repo: Test.Repo)
+      |> Enum.count()
+      |> assert_eq(345)
+
+      assert [%{value: "value-0001"}] =
+               Supra.stream_by(Data.Query.base(), :value, repo: Test.Repo)
+               |> Stream.take(1)
+               |> Enum.to_list()
+
+      assert [%{value: "value-0345"}] =
+               Supra.stream_by(Data.Query.base(), :value, order: :desc, repo: Test.Repo)
+               |> Stream.take(1)
+               |> Enum.to_list()
+    end
+
+    @tag max_value: 250
+    test "handles queries with existing where clauses" do
+      Supra.stream_by(Data.Query.where_greater_than(177), :value, repo: Test.Repo)
+      |> Enum.count()
+      |> assert_eq(250 - 177)
+
+      assert [%{value: "value-0178"}] =
+               Supra.stream_by(Data.Query.where_greater_than(177), :value, repo: Test.Repo)
+               |> Stream.take(1)
+               |> Enum.to_list()
+
+      assert [%{value: "value-0250"}] =
+               Supra.stream_by(Data.Query.where_greater_than(177), :value, order: :desc, repo: Test.Repo)
+               |> Stream.take(1)
+               |> Enum.to_list()
+    end
+  end
 end

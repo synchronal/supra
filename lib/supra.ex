@@ -14,6 +14,9 @@ defmodule Supra do
   @type result(type) :: {:ok, type} | {:error, Ecto.Changeset.t(type)}
   @type result(ok_t, error_t) :: {:ok, ok_t} | {:error, Ecto.Changeset.t(error_t)}
 
+  @type stream_opts() :: [stream_opt()]
+  @type stream_opt() :: {:repo, module()} | {:order, :asc | :desc} | {:preload, term()}
+
   # # #
 
   @doc "Returns the number of rows in `queryable`"
@@ -45,4 +48,66 @@ defmodule Supra do
   @spec limit(Ecto.Queryable.t(), non_neg_integer()) :: Ecto.Queryable.t()
   def limit(queryable, count) when is_integer(count) and count >= 0,
     do: queryable |> Ecto.Query.limit(^count)
+
+  @doc """
+  Streams an Ecto query without requiring a transaction.
+  Must be given the name of a non-nullable field to iterate over in batches.
+
+  ## Options
+
+  - `repo :: module()` required - An `Ecto.Repo` execute queries.
+  - `order :: :asc | :desc` default `:asc` - The order in which to iterate over batches.
+  - `preload :: term()` optional - An optional set of preloads to apply to each batch before
+    emitting members to the stream.
+  """
+  @spec stream_by(Ecto.Query.t(), atom(), stream_opts()) :: Enum.t()
+  def stream_by(query, field, opts),
+    do:
+      Stream.unfold(nil, &Supra.Stream.get_next_batch(query, field, &1, opts))
+      |> Stream.flat_map(& &1)
+
+  defmodule Stream do
+    require Ecto.Query
+
+    @batch_size 100
+
+    def get_next_batch(query, field, last_field_value, opts) do
+      repo = Keyword.get(opts, :repo) || raise("")
+
+      case query_batch(
+             repo,
+             Ecto.Query.exclude(query, :order_by),
+             field,
+             last_field_value,
+             Keyword.get(opts, :order, :asc),
+             Keyword.get(opts, :preload, [])
+           ) do
+        [] ->
+          nil
+
+        batch ->
+          last = List.last(batch)
+          {batch, Map.get(last, field)}
+      end
+    end
+
+    def query_batch(repo, query, field, last_field_value, order, preloads) do
+      query
+      |> then(fn query ->
+        if last_field_value,
+          do: next_batch(query, field, order, last_field_value),
+          else: query
+      end)
+      |> Ecto.Query.order_by([{^order, ^field}])
+      |> Ecto.Query.limit(^@batch_size)
+      |> repo.all()
+      |> repo.preload(preloads)
+    end
+
+    def next_batch(query, field, :asc, last_value),
+      do: Ecto.Query.where(query, [entity], field(entity, ^field) > ^last_value)
+
+    def next_batch(query, field, :desc, last_value),
+      do: Ecto.Query.where(query, [entity], field(entity, ^field) < ^last_value)
+  end
 end
