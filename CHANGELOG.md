@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.1.0
+
 - Add `Supra.stream_by` for streaming queries outside of transactions.
 
 ## v1.0.0
