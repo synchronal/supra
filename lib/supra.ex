@@ -15,7 +15,7 @@ defmodule Supra do
   @type result(ok_t, error_t) :: {:ok, ok_t} | {:error, Ecto.Changeset.t(error_t)}
 
   @type stream_opts() :: [stream_opt()]
-  @type stream_opt() :: {:repo, module()} | {:order, :asc | :desc} | {:preload, term()}
+  @type stream_opt() :: {:repo, module()} | {:batch_size, pos_integer()} | {:order, :asc | :desc} | {:preload, term()}
 
   # # #
 
@@ -56,6 +56,7 @@ defmodule Supra do
   ## Options
 
   - `repo :: module()` required - An `Ecto.Repo` execute queries.
+  - `batch_size :: integer() deault `100` - The size of batches to query from the database.
   - `order :: :asc | :desc` default `:asc` - The order in which to iterate over batches.
   - `preload :: term()` optional - An optional set of preloads to apply to each batch before
     emitting members to the stream.

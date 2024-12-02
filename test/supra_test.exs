@@ -106,7 +106,7 @@ defmodule SupraTest do
 
     @tag max_value: 345
     test "handles datasets greater than batch size" do
-      Supra.stream_by(Data.Query.base(), :value, repo: Test.Repo)
+      Supra.stream_by(Data.Query.base(), :value, batch_size: 7, repo: Test.Repo)
       |> Enum.count()
       |> assert_eq(345)
 

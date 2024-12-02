@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `Supra.stream_by` accepts `:batch_size` option.
+
 ## v1.1.0
 
 - Add `Supra.stream_by` for streaming queries outside of transactions.

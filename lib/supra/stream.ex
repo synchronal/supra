@@ -12,6 +12,7 @@ defmodule Supra.Stream do
            Ecto.Query.exclude(query, :order_by),
            field,
            last_field_value,
+           Keyword.get(opts, :batch_size, @batch_size),
            Keyword.get(opts, :order, :asc),
            Keyword.get(opts, :preload, [])
          ) do
@@ -24,7 +25,7 @@ defmodule Supra.Stream do
     end
   end
 
-  def query_batch(repo, query, field, last_field_value, order, preloads) do
+  def query_batch(repo, query, field, last_field_value, batch_size, order, preloads) do
     query
     |> then(fn query ->
       if last_field_value,
@@ -32,7 +33,7 @@ defmodule Supra.Stream do
         else: query
     end)
     |> Ecto.Query.order_by([{^order, ^field}])
-    |> Ecto.Query.limit(^@batch_size)
+    |> Ecto.Query.limit(^batch_size)
     |> repo.all()
     |> repo.preload(preloads)
   end
