@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v2.0.0
+
 - Introduce `Supra.Error` for more precise raises.
 - Add `Supra.stream` with more control over how stream functions.
 - `Supra.stream_by` accepts `:batch_size` option.
