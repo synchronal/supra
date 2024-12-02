@@ -10,7 +10,7 @@ checks = [
   { check = "elixir", command = "packages-installed" },
   { check = "postgres", command = "running", args = { user = "${USER}"} },
   { check = "postgres", command = "role-exists", args = { role = "postgres", user = "${USER}" } },
-  { check = "postgres", command = "data-directory", args = { data-directory = "./priv/postgres/data" } },
+  { check = "postgres", command = "data-directory", args = { data-directory = ".local/postgres/data" } },
 ]
 
 [test]

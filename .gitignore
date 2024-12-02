@@ -1,5 +1,7 @@
 *.ez
+.DS_Store
 /.fetch
+/.local
 /_build/
 /cover/
 /deps/
@@ -7,7 +9,6 @@
 /priv/plts
 /priv/postgres
 /tmp/
-.DS_Store
 Brewfile.lock.json
 erl_crash.dump
 supra-*.tar
