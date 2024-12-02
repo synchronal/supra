@@ -14,9 +14,17 @@ defmodule Supra do
   @type result(type) :: {:ok, type} | {:error, Ecto.Changeset.t(type)}
   @type result(ok_t, error_t) :: {:ok, ok_t} | {:error, Ecto.Changeset.t(error_t)}
 
-  @type stream_opts() :: [stream_opt()]
-  @type stream_opt() :: {:repo, module()} | {:batch_size, pos_integer()} | {:order, :asc | :desc} | {:preload, term()}
+  @type stream_by_opts() :: [stream_by_opt()]
+  @type stream_by_opt() ::
+          {:repo, module()} | {:batch_size, pos_integer()} | {:order, :asc | :desc} | {:preload, term()}
 
+  @type stream_opts() :: [stream_opt()]
+  @type stream_opt() ::
+          {:cursor_fun, (term() -> term())}
+          | {:next_batch_fun, (term() -> term())}
+          | {:repo, module()}
+          | {:batch_size, pos_integer()}
+          | {:preload, term()}
   # # #
 
   @doc "Returns the number of rows in `queryable`"
@@ -61,9 +69,59 @@ defmodule Supra do
   - `preload :: term()` optional - An optional set of preloads to apply to each batch before
     emitting members to the stream.
   """
-  @spec stream_by(Ecto.Query.t(), atom(), stream_opts()) :: Enum.t()
-  def stream_by(query, field, opts),
-    do:
-      Stream.unfold(nil, &Supra.Stream.get_next_batch(query, field, &1, opts))
-      |> Stream.flat_map(& &1)
+  @spec stream_by(Ecto.Query.t(), atom(), stream_by_opts()) :: Enum.t()
+  def stream_by(query, field, opts) when is_atom(field) do
+    direction = Keyword.get(opts, :order, :asc)
+    query = query |> Ecto.Query.exclude(:order_by) |> Ecto.Query.order_by([{^direction, ^field}])
+
+    Stream.unfold(
+      nil,
+      fn last_value ->
+        Supra.Stream.unfold_next_batch(
+          query,
+          &Map.get(&1, field),
+          &Supra.Stream.where_next_batch(field, direction, &1),
+          last_value,
+          opts
+        )
+      end
+    )
+    |> Stream.flat_map(& &1)
+  end
+
+  @doc """
+  Streams an Ecto query without requiring a transaction.
+
+  ## Options
+
+  - `curosr_fun :: fun()` required - An arity-1 function that will be given the last value returned
+    from the stream. This function will be evaluated to save the cursor value that will be used
+    to find the next batch.
+  - `next_batch_fun :: fun()` required - An arity-1 function that will be given the cursor saved
+    from the previous batch. This function must return an `t:Ecto.Query.dynamic_expr/0` that may
+    used in a where clause to find the next batch.
+  - `repo :: module()` required - An `Ecto.Repo` execute queries.
+  - `batch_size :: integer() deault `100` - The size of batches to query from the database.
+  - `preload :: term()` optional - An optional set of preloads to apply to each batch before
+    emitting members to the stream.
+  """
+  @spec stream(Ecto.Query.t(), stream_opts()) :: Enum.t()
+  def stream(query, opts) do
+    cursor = Keyword.get(opts, :cursor_fun) || raise(Supra.Error, "missing required option :cursor_fun")
+    where_next = Keyword.get(opts, :next_batch_fun) || raise(Supra.Error, "missing required option :next_batch_fun")
+
+    Stream.unfold(
+      nil,
+      fn last_value ->
+        Supra.Stream.unfold_next_batch(
+          query,
+          cursor,
+          where_next,
+          last_value,
+          opts
+        )
+      end
+    )
+    |> Stream.flat_map(& &1)
+  end
 end

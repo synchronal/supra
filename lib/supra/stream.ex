@@ -4,16 +4,15 @@ defmodule Supra.Stream do
 
   @batch_size 100
 
-  def get_next_batch(query, field, last_field_value, opts) do
-    repo = Keyword.get(opts, :repo) || raise("")
+  def unfold_next_batch(query, cursor_finder, where_fun, last_field_value, opts) do
+    repo = Keyword.get(opts, :repo) || raise(Supra.Error, "missing required option :repo")
 
     case query_batch(
            repo,
-           Ecto.Query.exclude(query, :order_by),
-           field,
+           query,
+           where_fun,
            last_field_value,
            Keyword.get(opts, :batch_size, @batch_size),
-           Keyword.get(opts, :order, :asc),
            Keyword.get(opts, :preload, [])
          ) do
       [] ->
@@ -21,26 +20,27 @@ defmodule Supra.Stream do
 
       batch ->
         last = List.last(batch)
-        {batch, Map.get(last, field)}
+        {batch, cursor_finder.(last)}
     end
   end
 
-  def query_batch(repo, query, field, last_field_value, batch_size, order, preloads) do
+  def query_batch(repo, query, where_fun, last_field_value, batch_size, preloads) do
+    where_clause = where_fun.(last_field_value)
+
     query
     |> then(fn query ->
       if last_field_value,
-        do: next_batch(query, field, order, last_field_value),
+        do: Ecto.Query.where(query, ^where_clause),
         else: query
     end)
-    |> Ecto.Query.order_by([{^order, ^field}])
     |> Ecto.Query.limit(^batch_size)
     |> repo.all()
     |> repo.preload(preloads)
   end
 
-  def next_batch(query, field, :asc, last_value),
-    do: Ecto.Query.where(query, [entity], field(entity, ^field) > ^last_value)
+  def where_next_batch(field, :asc, last_value),
+    do: Ecto.Query.dynamic([entity], field(entity, ^field) > ^last_value)
 
-  def next_batch(query, field, :desc, last_value),
-    do: Ecto.Query.where(query, [entity], field(entity, ^field) < ^last_value)
+  def where_next_batch(field, :desc, last_value),
+    do: Ecto.Query.dynamic([entity], field(entity, ^field) < ^last_value)
 end

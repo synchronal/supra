@@ -1,8 +1,76 @@
 defmodule SupraTest do
   # @related [subject](lib/supra.ex)
+  use EctoTemp, repo: Test.Repo
   use Test.DataCase, async: true
   require Ecto.Query
+  require EctoTemp.Factory
+
   doctest Supra
+
+  deftemptable :data_temp do
+    column(:value, :string, null: false)
+    column(:rel_id, :integer)
+  end
+
+  deftemptable :rel_temp do
+    column(:name, :string, null: false)
+  end
+
+  setup do
+    create_temp_tables()
+    :ok
+  end
+
+  defmodule Rel do
+    use Ecto.Schema
+    import Ecto.Changeset, only: [cast: 3]
+
+    schema "rel_temp" do
+      field(:name, :string)
+    end
+
+    def changeset(attrs), do: cast(%__MODULE__{}, Map.new(attrs), ~w[name])
+
+    defmodule Query do
+      import Ecto.Query
+      def base, do: from(_ in Rel, as: :rels)
+
+      def order_by_name(query \\ base()),
+        do: query |> order_by([rels: r], asc: r.name)
+    end
+  end
+
+  defmodule Data do
+    use Ecto.Schema
+    import Ecto.Changeset, only: [cast: 3]
+
+    @primary_key false
+    schema "data_temp" do
+      field(:value, :string)
+      belongs_to(:rel, Rel)
+    end
+
+    def padded(int),
+      do: String.pad_leading(to_string(int), 4, "0")
+
+    def changeset(attrs), do: cast(%__MODULE__{}, Map.new(attrs), ~w[value]a)
+
+    defmodule Query do
+      import Ecto.Query
+      def base, do: from(_ in Data, as: :data)
+
+      def join_rel(query \\ base()),
+        do: query |> join(:inner, [data: d], _ in assoc(d, :rel), as: :rels)
+
+      def order_by_rel(query \\ base()),
+        do: query |> join_rel() |> Rel.Query.order_by_name()
+
+      def where_greater_than(query \\ base(), int) do
+        value = "value-#{Data.padded(int)}"
+        where(query, [data: d], d.value > ^value)
+      end
+    end
+  end
 
   describe "count" do
     test "returns a count of records returned by a query" do
@@ -41,44 +109,6 @@ defmodule SupraTest do
   end
 
   describe "stream_by" do
-    use EctoTemp, repo: Test.Repo
-
-    require EctoTemp.Factory
-
-    deftemptable :data_temp do
-      column(:value, :string, null: false)
-    end
-
-    setup do
-      create_temp_tables()
-      :ok
-    end
-
-    defmodule Data do
-      use Ecto.Schema
-      import Ecto.Changeset, only: [cast: 3]
-
-      @primary_key false
-      schema "data_temp" do
-        field(:value, :string)
-      end
-
-      def padded(int),
-        do: String.pad_leading(to_string(int), 4, "0")
-
-      def changeset(attrs), do: cast(%__MODULE__{}, Map.new(attrs), ~w[value]a)
-
-      defmodule Query do
-        import Ecto.Query
-        def base, do: from(_ in Data, as: :data)
-
-        def where_greater_than(query \\ base(), int) do
-          value = "value-#{Data.padded(int)}"
-          where(query, [data: d], d.value > ^value)
-        end
-      end
-    end
-
     setup %{max_value: max} do
       for int <- 1..max do
         EctoTemp.Factory.insert(:data_temp, value: "value-#{Data.padded(int)}")
@@ -136,6 +166,40 @@ defmodule SupraTest do
                Supra.stream_by(Data.Query.where_greater_than(177), :value, order: :desc, repo: Test.Repo)
                |> Stream.take(1)
                |> Enum.to_list()
+    end
+  end
+
+  describe "stream" do
+    setup %{max_value: max} do
+      for int <- 1..max do
+        EctoTemp.Factory.insert(:rel_temp, id: int, name: Moar.Random.string())
+        EctoTemp.Factory.insert(:data_temp, rel_id: int, value: "value-#{Data.padded(int)}")
+      end
+
+      :ok
+    end
+
+    @tag max_value: 10
+    test "handles queries with sorts across joins" do
+      cursor = & &1.rel.name
+      where_next = fn name -> Ecto.Query.dynamic([rels: r], r.name > ^name) end
+
+      results =
+        Supra.stream(Data.Query.order_by_rel(),
+          batch_size: 3,
+          cursor_fun: cursor,
+          next_batch_fun: where_next,
+          preload: :rel,
+          repo: Test.Repo
+        )
+        |> Enum.to_list()
+
+      assert length(results) == 10
+      assert match?(%Rel{}, hd(results).rel)
+
+      assert results == Enum.sort_by(results, & &1.rel.name)
+      assert results != Enum.sort_by(results, & &1.value)
+      assert results != Enum.sort_by(results, & &1.rel.id)
     end
   end
 end
