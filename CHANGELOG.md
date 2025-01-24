@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Test against Elixir 1.18.
+- **Breaking change:** Drop support for Elixir 1.15.
+
 ## v2.0.0
 
 - Introduce `Supra.Error` for more precise raises.
