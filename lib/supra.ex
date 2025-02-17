@@ -94,7 +94,7 @@ defmodule Supra do
 
   ## Options
 
-  - `curosr_fun :: fun()` required - An arity-1 function that will be given the last value returned
+  - `cursor_fun :: fun()` required - An arity-1 function that will be given the last value returned
     from the stream. This function will be evaluated to save the cursor value that will be used
     to find the next batch.
   - `next_batch_fun :: fun()` required - An arity-1 function that will be given the cursor saved
