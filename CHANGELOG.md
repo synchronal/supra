@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v3.0.1
+
 - Add warning to stream functions, documenting problems that can occur when streaming
   with query-time preloads.
 
