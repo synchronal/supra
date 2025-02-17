@@ -67,7 +67,13 @@ defmodule Supra do
   - `batch_size :: integer() deault `100` - The size of batches to query from the database.
   - `order :: :asc | :desc` default `:asc` - The order in which to iterate over batches.
   - `preload :: term()` optional - An optional set of preloads to apply to each batch before
-    emitting members to the stream.
+    emitting members to the stream. This is preferred over query-time preloads, as described below.
+
+  ## Warning
+
+  When streaming a query with query-time preloads, associations may be truncated for the last
+  record of each stream batch. The `:preload` option to `Supra.stream/2` and `Supra.stream_by/3`
+  operates on the returned values of each batch, and thus does not exhibit this problem.
   """
   @spec stream_by(Ecto.Query.t(), atom(), stream_by_opts()) :: Enum.t()
   def stream_by(query, field, opts) when is_atom(field) do
@@ -103,7 +109,13 @@ defmodule Supra do
   - `repo :: module()` required - An `Ecto.Repo` execute queries.
   - `batch_size :: integer() deault `100` - The size of batches to query from the database.
   - `preload :: term()` optional - An optional set of preloads to apply to each batch before
-    emitting members to the stream.
+    emitting members to the stream. This is preferred over query-time preloads, as described below.
+
+  ## Warning
+
+  When streaming a query with query-time preloads, associations may be truncated for the last
+  record of each stream batch. The `:preload` option to `Supra.stream/2` and `Supra.stream_by/3`
+  operates on the returned values of each batch, and thus does not exhibit this problem.
   """
   @spec stream(Ecto.Query.t(), stream_opts()) :: Enum.t()
   def stream(query, opts) do
