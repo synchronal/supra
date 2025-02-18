@@ -64,7 +64,7 @@ defmodule Supra do
   ## Options
 
   - `repo :: module()` required - An `Ecto.Repo` execute queries.
-  - `batch_size :: integer() deault `100` - The size of batches to query from the database.
+  - `batch_size :: integer()` default `100` - The size of batches to query from the database.
   - `order :: :asc | :desc` default `:asc` - The order in which to iterate over batches.
   - `preload :: term()` optional - An optional set of preloads to apply to each batch before
     emitting members to the stream. This is preferred over query-time preloads, as described below.
@@ -107,7 +107,7 @@ defmodule Supra do
     from the previous batch. This function must return an `t:Ecto.Query.dynamic_expr/0` that may
     used in a where clause to find the next batch.
   - `repo :: module()` required - An `Ecto.Repo` execute queries.
-  - `batch_size :: integer() deault `100` - The size of batches to query from the database.
+  - `batch_size :: integer()` default `100` - The size of batches to query from the database.
   - `preload :: term()` optional - An optional set of preloads to apply to each batch before
     emitting members to the stream. This is preferred over query-time preloads, as described below.
 
