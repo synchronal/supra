@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v3.0.2
+
 - Even more documentation.
 
 ## v3.0.1
