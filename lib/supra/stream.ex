@@ -40,13 +40,14 @@ defmodule Supra.Stream do
   end
 
   def query_batch(repo, query, where_fun, last_field_value, batch_size) do
-    where_clause = where_fun.(last_field_value)
-
     query
     |> then(fn query ->
-      if last_field_value,
-        do: Ecto.Query.where(query, ^where_clause),
-        else: query
+      if last_field_value do
+        where_clause = where_fun.(last_field_value)
+        Ecto.Query.where(query, ^where_clause)
+      else
+        query
+      end
     end)
     |> Ecto.Query.limit(^batch_size)
     |> repo.all()

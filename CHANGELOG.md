@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Add `:batch_transform` option to `Surpa.stream`.
+- `Supra.stream` only filters batch query when the last field value is truthy.
+- Add `:batch_transform` option to `Supra.stream`.
 
 ## v3.0.2
 
