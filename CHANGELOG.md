@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `:batch_transform` option to `Surpa.stream`.
+
 ## v3.0.2
 
 - Even more documentation.

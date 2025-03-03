@@ -79,6 +79,7 @@ defmodule Supra do
           | {:next_batch_fun, (term() -> term())}
           | {:repo, module()}
           | {:batch_size, pos_integer()}
+          | {:batch_transform, (term() -> term())}
           | {:preload, term()}
   # # #
 
@@ -156,6 +157,10 @@ defmodule Supra do
 
   ## Options
 
+  - `batch_transform :: fun()` optional - An arity-1 function that receives each batch and transforms
+    it. May be used to manually run each batch through a set of preload functions. Note that, when
+    specified, the batch transform functions after executing the `:preload` option, but before the
+    `:cursor_fun`.
   - `cursor_fun :: fun()` required - An arity-1 function that will be given the last value returned
     from the stream. This function will be evaluated to save the cursor value that will be used
     to find the next batch.

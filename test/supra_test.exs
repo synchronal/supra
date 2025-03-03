@@ -201,5 +201,25 @@ defmodule SupraTest do
       assert results != Enum.sort_by(results, & &1.value)
       assert results != Enum.sort_by(results, & &1.rel.id)
     end
+
+    @tag max_value: 10
+    test "applies a batch transform function" do
+      cursor = & &1.name
+      where_next = fn name -> Ecto.Query.dynamic([rels: r], r.name > ^name) end
+      batch_transform = fn batch -> batch |> Test.Repo.preload(:rel) |> Enum.map(&Map.get(&1, :rel)) end
+
+      results =
+        Supra.stream(Data.Query.order_by_rel(),
+          batch_size: 3,
+          batch_transform: batch_transform,
+          cursor_fun: cursor,
+          next_batch_fun: where_next,
+          repo: Test.Repo
+        )
+        |> Enum.to_list()
+
+      assert length(results) == 10
+      assert match?(%Rel{}, hd(results))
+    end
   end
 end
