@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove unnecessary stream operations in `Supra.stream` and `Supra.stream_by`.
+
 ## v3.1.0
 
 - `Supra.stream` only filters batch query when the last field value is truthy.

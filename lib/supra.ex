@@ -137,19 +137,19 @@ defmodule Supra do
     direction = Keyword.get(opts, :order, :asc)
     query = query |> Ecto.Query.exclude(:order_by) |> Ecto.Query.order_by([{^direction, ^field}])
 
-    Stream.unfold(
-      nil,
-      fn last_value ->
-        Supra.Stream.unfold_next_batch(
+    Stream.resource(
+      fn -> nil end,
+      fn cursor ->
+        Supra.Stream.query_next_batch(
           query,
           &Map.get(&1, field),
           &Supra.Stream.where_next_batch(field, direction, &1),
-          last_value,
+          cursor,
           opts
         )
-      end
+      end,
+      fn _ -> :ok end
     )
-    |> Stream.flat_map(& &1)
   end
 
   @doc """
@@ -215,21 +215,21 @@ defmodule Supra do
   """
   @spec stream(Ecto.Query.t(), stream_opts()) :: Enum.t()
   def stream(query, opts) do
-    cursor = Keyword.get(opts, :cursor_fun) || raise(Supra.Error, "missing required option :cursor_fun")
+    cursor_fn = Keyword.get(opts, :cursor_fun) || raise(Supra.Error, "missing required option :cursor_fun")
     where_next = Keyword.get(opts, :next_batch_fun) || raise(Supra.Error, "missing required option :next_batch_fun")
 
-    Stream.unfold(
-      nil,
-      fn last_value ->
-        Supra.Stream.unfold_next_batch(
+    Stream.resource(
+      fn -> nil end,
+      fn cursor ->
+        Supra.Stream.query_next_batch(
           query,
-          cursor,
+          cursor_fn,
           where_next,
-          last_value,
+          cursor,
           opts
         )
-      end
+      end,
+      fn _ -> :ok end
     )
-    |> Stream.flat_map(& &1)
   end
 end

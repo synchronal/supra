@@ -4,7 +4,7 @@ defmodule Supra.Stream do
 
   @batch_size 100
 
-  def unfold_next_batch(query, cursor_finder, where_fun, last_field_value, opts) do
+  def query_next_batch(query, cursor_finder, where_fun, cursor, opts) do
     repo = Keyword.get(opts, :repo) || raise(Supra.Error, "missing required option :repo")
     batch_transform = Keyword.get(opts, :batch_transform)
     preloads = Keyword.get(opts, :preload)
@@ -13,11 +13,11 @@ defmodule Supra.Stream do
            repo,
            query,
            where_fun,
-           last_field_value,
+           cursor,
            Keyword.get(opts, :batch_size, @batch_size)
          ) do
       [] ->
-        nil
+        {:halt, nil}
 
       batch ->
         batch =
@@ -39,11 +39,11 @@ defmodule Supra.Stream do
     end
   end
 
-  def query_batch(repo, query, where_fun, last_field_value, batch_size) do
+  def query_batch(repo, query, where_fun, cursor, batch_size) do
     query
     |> then(fn query ->
-      if last_field_value do
-        where_clause = where_fun.(last_field_value)
+      if cursor do
+        where_clause = where_fun.(cursor)
         Ecto.Query.where(query, ^where_clause)
       else
         query

@@ -172,7 +172,7 @@ defmodule SupraTest do
   describe "stream" do
     setup %{max_value: max} do
       for int <- 1..max do
-        EctoTemp.Factory.insert(:rel_temp, id: int, name: Moar.Random.string())
+        EctoTemp.Factory.insert(:rel_temp, id: int, name: Moar.Random.string() |> String.downcase())
         EctoTemp.Factory.insert(:data_temp, rel_id: int, value: "value-#{Data.padded(int)}")
       end
 
@@ -197,7 +197,8 @@ defmodule SupraTest do
       assert length(results) == 10
       assert match?(%Rel{}, hd(results).rel)
 
-      assert results == Enum.sort_by(results, & &1.rel.name)
+      names = Enum.map(results, & &1.rel.name)
+      assert names == Enum.sort(names)
       assert results != Enum.sort_by(results, & &1.value)
       assert results != Enum.sort_by(results, & &1.rel.id)
     end
