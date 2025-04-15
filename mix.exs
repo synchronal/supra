@@ -2,7 +2,7 @@ defmodule Supra.MixProject do
   use Mix.Project
 
   @scm_url "https://github.com/synchronal/supra"
-  @version "3.1.0"
+  @version "3.1.1"
 
   def project do
     [

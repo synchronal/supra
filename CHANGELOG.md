@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v3.1.1
+
 - Remove unnecessary stream operations in `Supra.stream` and `Supra.stream_by`.
 
 ## v3.1.0
