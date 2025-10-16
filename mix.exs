@@ -58,7 +58,7 @@ defmodule Supra.MixProject do
       {:ex_doc, "~> 0.28", only: [:docs, :dev], runtime: false},
       {:mix_audit, "~> 2.0", only: :dev, runtime: false},
       {:mix_test_watch, "~> 1.2", runtime: false, only: :dev},
-      {:moar, "~> 2.0", only: :test},
+      {:moar, "~> 3.0", only: :test},
       {:postgrex, ">= 0.0.0", only: :test}
     ]
 
